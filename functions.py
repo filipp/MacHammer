@@ -21,10 +21,10 @@ def rsync(src, dst, flags='auE'):
 
 
 def dscl(domain='.', *args):
-    subprocess.call(['/usr/bin/dscl', domain, ])
+    subprocess.call(['/usr/bin/dscl', domain] + args)
 
 
-def exec_jar(path, user='jkmmadmin'):
+def exec_jar(path, user):
     javapath = '/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java'
     if not os.path.exists(javapath):
         raise ValueError('Looks like your machine does not have Java installed')
@@ -156,7 +156,7 @@ def install_profile(path):
     """
     Installs a configuration profile
     """
-    subprocess.call(['profiles', '-I', '-F', path])
+    subprocess.call(['/usr/bin/profiles', '-I', '-F', path])
 
 
 def install_pkg(pkg, target='/'):
@@ -169,7 +169,7 @@ def install_pkg(pkg, target='/'):
 def mount_afp(username, password, url, mountpoint=None):
     if mountpoint is None:
         mountpoint = tempfile.mkdtemp()
-    subprocess.call(['mount_afp', 'afp://%s:%s@%s' % (username, password, url), mountpoint])
+    subprocess.call(['/sbin/mount_afp', 'afp://%s:%s@%s' % (username, password, url), mountpoint])
     return mountpoint
 
 
@@ -196,15 +196,15 @@ def install_su(restart=True):
     """
     Install all Apple software Updates, restart if update requires it
     """
-    su_results = subprocess.check_output(['softwareupdate', '-ia'])
+    su_results = subprocess.check_output(['/usr/sbin/softwareupdate', '-ia'])
     if restart and 'restart' in su_results:
         tell_app('Finder', 'restart')
         sys.exit(0)
 
 
 def disable_wifi(port='en1'):
-    subprocess.call(['networksetup', '-setairportpower', port, 'off'])
-    subprocess.call(['networksetup', '-setnetworkserviceenabled', 'Wi-Fi', 'off'])
+    subprocess.call(['/usr/sbin/networksetup', '-setairportpower', port, 'off'])
+    subprocess.call(['/usr/sbin/networksetup', '-setnetworkserviceenabled', 'Wi-Fi', 'off'])
 
 
 def log(msg):

@@ -5,7 +5,7 @@
 
 ### System Requirements
 
-- OS X
+- OS X (tested with 10.11)
 
 
 ### system_profiler
