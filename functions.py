@@ -12,12 +12,16 @@ from system_profiler import SystemProfile
 SERVICEDIR = '/Library/Services'
 
 
+def display_notification(msg, title='', subtitle=''):
+    osascript('display notification "{0}" with title "{1}" subtitle "{2}"'.format(msg, title, subtitle))
+
+
 def ditto(src, dst):
     subprocess.call(['/usr/bin/ditto', src, dst])
 
 
 def rsync(src, dst, flags='auE'):
-    subprocess.call(['rsync', '-' + flags, src, dst])
+    subprocess.call(['/usr/bin/rsync', '-' + flags, src, dst])
 
 
 def dscl(domain='.', *args):
@@ -216,7 +220,3 @@ def install_service(src):
         os.mkdir(SERVICEDIR)
 
     ditto(src, SERVICEDIR)
-
-
-if __name__ == '__main__':
-    delete_user('demouser')

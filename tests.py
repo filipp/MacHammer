@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import logging
 import subprocess
 from unittest import main, skip, TestCase
 
+import functions as mh
 import system_profiler
 
 
@@ -24,7 +26,7 @@ class SystemProfilerTestCase(TestCase):
 
     def testOsVersion(self):
         """
-        Check that the OS version we get from SP is contained 
+        Check that the OS version we get from SP is contained
         in the output of sw_vers
         """
         build = subprocess.check_output(['sw_vers', '-buildVersion']).strip()
@@ -51,6 +53,20 @@ class AppsTestCase(TestCase):
     def testFindApplications(self):
         results = self.profile.find('path', '/Applications')
         self.assertTrue(len(results) > 10)
+
+
+class FunctionsTestCase(TestCase):
+    def setUp(self):
+        self.stickes = '/Applications/Stickies.app'
+
+    def test_notification(self):
+        mh.display_notification('blaaa')
+
+    def test_add_login_item(self):
+        mh.add_login_item(self.stickes)
+
+    def test_remove_login_item(self):
+        mh.remove_login_item(path=self.stickes)
 
 
 if __name__ == '__main__':
