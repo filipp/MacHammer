@@ -10,7 +10,7 @@ def delete_printers():
 
 def add_printer(printer, options={}):
     """
-    Adds a printer
+    Add a printer
     A printer is a tuple (name, PPD path, LPD address)
     """
     cmd = ['/usr/sbin/lpadmin', '-x', printer[1]]

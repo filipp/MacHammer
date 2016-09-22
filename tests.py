@@ -60,7 +60,7 @@ class FunctionsTestCase(TestCase):
         self.stickes = '/Applications/Stickies.app'
 
     def test_notification(self):
-        mh.display_notification('blaaa')
+        mh.display_notification('blaaa "lalala"')
 
     def test_add_login_item(self):
         mh.add_login_item(self.stickes)

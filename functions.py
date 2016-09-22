@@ -13,6 +13,9 @@ SERVICEDIR = '/Library/Services'
 
 
 def display_notification(msg, title='', subtitle=''):
+    msg = msg.replace('"', '\\"')
+    title = title.replace('"', '\\"')
+    subtitle = subtitle.replace('"', '\\"')
     osascript('display notification "{0}" with title "{1}" subtitle "{2}"'.format(msg, title, subtitle))
 
 
@@ -33,7 +36,7 @@ def exec_jar(path, user):
     if not os.path.exists(javapath):
         raise ValueError('Looks like your machine does not have Java installed')
 
-    subprocess.call(['launchctl', 'asuser', user, javapath, '-jar', path, '-silent'])
+    subprocess.call(['/bin/launchctl', 'asuser', user, javapath, '-jar', path, '-silent'])
 
 
 def osascript(s):
@@ -181,7 +184,7 @@ def umount(path):
     """
     Unmounts path
     """
-    subprocess.call(['umount', path])
+    subprocess.call(['/sbin/umount', path])
 
 
 def enable_ard(username):
