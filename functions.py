@@ -12,7 +12,24 @@ from system_profiler import SystemProfile
 SERVICEDIR = '/Library/Services'
 
 
+def call(**args):
+    """Shorthand for subprocess.call.
+
+    > call('ls', '/Users')
+    """
+    subprocess.call(args)
+
+
+def rmdir(path):
+    """Shortcut for deleting a directory."""
+    call('rm', '-r', path)
+
+
 def display_notification(msg, title='', subtitle=''):
+    """Display notification with optional title and subtitle.
+
+    display_notification('Mymessage')
+    """
     msg = msg.replace('"', '\\"')
     title = title.replace('"', '\\"')
     subtitle = subtitle.replace('"', '\\"')
@@ -52,16 +69,12 @@ def quit_app(app):
 
 
 def copy_app(path):
-    """
-    Copies path to /Applications folder
-    """
+    """Copy path to /Applications folder."""
     rsync(path.rstrip('/'), '/Applications/')
 
 
 def add_login_item(path, name=None, hidden=True):
-    """
-    Adds login item to the current user
-    """
+    """Add login item to the current user."""
     if not name:
         name = os.path.basename(path)
 
@@ -71,9 +84,7 @@ def add_login_item(path, name=None, hidden=True):
 
 
 def remove_login_item(**kwargs):
-    """
-    Removes login item from the current user
-    """
+    """Remove login item from the current user."""
     if not (kwargs.get('name') or kwargs.get('path')):
         raise ValueError('Need either path or name')
 
@@ -85,9 +96,7 @@ def remove_login_item(**kwargs):
 
 
 def create_user(username, realname, password):
-    """
-    Creates a user
-    """
+    """Create a user account."""
     os.system("""dscl . create /Users/{0}
                  dscl . create /Users/{0} RealName "{1}"
                  dscl . passwd /Users/{0} {2}
@@ -100,9 +109,7 @@ def create_user(username, realname, password):
 
 
 def hide_user(username, hide_home=True):
-    """
-    Hides a user
-    """
+    """Hide a user account."""
     path = '/Users/%s' % username
     subprocess.call(['dscl', '.', 'create', path, 'IsHidden', '1'])
 
@@ -111,9 +118,7 @@ def hide_user(username, hide_home=True):
 
 
 def delete_user(username, delete_home=True):
-    """
-    Deletes a user account
-    """
+    """Delete a user account."""
     path = '/Users/' + username
     dscl = subprocess.check_output(['dscl', '-plist', '.', 'read', path])
     userinfo = plistlib.readPlistFromString(dscl)
@@ -126,71 +131,12 @@ def delete_user(username, delete_home=True):
 
 
 def make_admin(username):
+    """Give admin rights to username."""
     subprocess.call(['dscl', '.', '-append', '/Groups/admin', 'users', username])
 
 
-def is_laptop():
-    profile = SystemProfile('SPHardwareDataType')
-    return 'Book' in profile.machine_model
-
-
-def is_desktop():
-    return not is_laptop()
-
-
-def mount_image(path):
-    """
-    Mounts disk image and returns path to mountpoint
-    """
-    r = subprocess.check_output(['/usr/bin/hdiutil', 'mount', '-plist', '-nobrowse', path])
-    plist = plistlib.readPlistFromString(r)
-    for p in [p.get('mount-point') for p in plist.get('system-entities')]:
-        if p and os.path.exists(p):
-            return p
-
-    raise ValueError('Failed to mount %s' % path)
-
-
-def mount_and_install(dmg, pkg):
-    """
-    Mounts the DMG and installs the PKG
-    """
-    p = mount_image(dmg)
-    install_pkg(os.path.join(p, pkg))
-
-
-def install_profile(path):
-    """
-    Installs a configuration profile
-    """
-    subprocess.call(['/usr/bin/profiles', '-I', '-F', path])
-
-
-def install_pkg(pkg, target='/'):
-    """
-    Installs a package
-    """
-    subprocess.call(['/usr/sbin/installer', '-pkg', pkg, '-target', target])
-
-
-def mount_afp(username, password, url, mountpoint=None):
-    if mountpoint is None:
-        mountpoint = tempfile.mkdtemp()
-    subprocess.call(['/sbin/mount_afp', 'afp://%s:%s@%s' % (username, password, url), mountpoint])
-    return mountpoint
-
-
-def umount(path):
-    """
-    Unmounts path
-    """
-    subprocess.call(['/sbin/umount', path])
-
-
 def enable_ard(username):
-    """
-    Enables ARD for username
-    """
+    """Enable Apple Remote Desktop for username."""
     subprocess.call(['/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart',
                      '-activate', '-configure',
                      '-access', '-on',
@@ -199,12 +145,59 @@ def enable_ard(username):
                      '-restart', '-agent'])
 
 
+def is_laptop():
+    profile = SystemProfile('Hardware')
+    return 'Book' in profile.machine_model
+
+
+def is_desktop():
+    return not is_laptop()
+
+
+def mount_image(dmg):
+    """Mount disk image and return path to mountpoint."""
+    r = subprocess.check_output(['/usr/bin/hdiutil', 'mount', '-plist', '-nobrowse', dmg])
+    plist = plistlib.readPlistFromString(r)
+    for p in [p.get('mount-point') for p in plist.get('system-entities')]:
+        if p and os.path.exists(p):
+            return p
+
+    raise ValueError('Failed to mount %s' % dmg)
+
+
+def mount_and_install(dmg, pkg):
+    """Mountsthe DMG and installs the PKG."""
+    p = mount_image(dmg)
+    install_pkg(os.path.join(p, pkg))
+
+
+def install_profile(path):
+    """Install a configuration profile."""
+    subprocess.call(['/usr/bin/profiles', '-I', '-F', path])
+
+
+def install_pkg(pkg, target='/'):
+    """Install a package."""
+    subprocess.call(['/usr/sbin/installer', '-pkg', pkg, '-target', target])
+
+
+def mount_afp(url, username, password, mountpoint=None):
+    """Mount AFP share."""
+    if mountpoint is None:
+        mountpoint = tempfile.mkdtemp()
+    subprocess.call(['/sbin/mount_afp', 'afp://%s:%s@%s' % (username, password, url), mountpoint])
+    return mountpoint
+
+
+def umount(path):
+    """Unmount path."""
+    subprocess.call(['/sbin/umount', path])
+
+
 def install_su(restart=True):
-    """
-    Install all Apple software Updates, restart if update requires it
-    """
+    """Install all available Apple software Updates, restart if update requires it."""
     su_results = subprocess.check_output(['/usr/sbin/softwareupdate', '-ia'])
-    if restart and 'restart' in su_results:
+    if restart and ('restart' in su_results):
         tell_app('Finder', 'restart')
         sys.exit(0)
 
@@ -219,6 +212,7 @@ def log(msg):
 
 
 def install_service(src):
+    """Copy .service to systemwide Services folder."""
     if not os.path.exists(SERVICEDIR):
         os.mkdir(SERVICEDIR)
 
