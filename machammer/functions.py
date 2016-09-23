@@ -6,13 +6,14 @@ import subprocess
 import sys
 import tempfile
 
+from xml.parsers.expat import ExpatError
 from system_profiler import SystemProfile
 
 
 SERVICEDIR = '/Library/Services'
 
 
-def call(**args):
+def call(*args):
     """Shorthand for subprocess.call.
 
     > call('ls', '/Users')
@@ -33,18 +34,22 @@ def display_notification(msg, title='', subtitle=''):
     msg = msg.replace('"', '\\"')
     title = title.replace('"', '\\"')
     subtitle = subtitle.replace('"', '\\"')
-    osascript('display notification "{0}" with title "{1}" subtitle "{2}"'.format(msg, title, subtitle))
+    cmd = 'display notification "{0}" with title "{1}" subtitle "{2}"'
+    osascript(cmd.format(msg, title, subtitle))
 
 
 def ditto(src, dst):
+    """Shortcut for ditto."""
     subprocess.call(['/usr/bin/ditto', src, dst])
 
 
 def rsync(src, dst, flags='auE'):
+    """Shortcut for rsync."""
     subprocess.call(['/usr/bin/rsync', '-' + flags, src, dst])
 
 
 def dscl(domain='.', *args):
+    """Shortcut for dscl."""
     subprocess.call(['/usr/bin/dscl', domain] + args)
 
 
@@ -114,7 +119,7 @@ def hide_user(username, hide_home=True):
     subprocess.call(['dscl', '.', 'create', path, 'IsHidden', '1'])
 
     if hide_home:
-        subprocess.call(['chflags', 'hidden', path])
+        subprocess.call(['/usr/bin/chflags', 'hidden', path])
 
 
 def delete_user(username, delete_home=True):
@@ -157,7 +162,12 @@ def is_desktop():
 def mount_image(dmg):
     """Mount disk image and return path to mountpoint."""
     r = subprocess.check_output(['/usr/bin/hdiutil', 'mount', '-plist', '-nobrowse', dmg])
-    plist = plistlib.readPlistFromString(r)
+
+    try:
+        plist = plistlib.readPlistFromString(r)
+    except ExpatError:  # probably a EULA-image, return None instead of breaking
+        return None
+
     for p in [p.get('mount-point') for p in plist.get('system-entities')]:
         if p and os.path.exists(p):
             return p
