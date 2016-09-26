@@ -161,7 +161,14 @@ def is_desktop():
 
 def mount_image(dmg):
     """Mount disk image and return path to mountpoint."""
-    r = subprocess.check_output(['/usr/bin/hdiutil', 'mount', '-plist', '-nobrowse', dmg])
+    p = subprocess.Popen(['/usr/bin/hdiutil', 'mount', '-plist', '-nobrowse', dmg],
+                         stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    r, e = p.communicate(input=b'Q\nY\n')
+
+    if e:
+        raise Exception(e)
 
     try:
         plist = plistlib.readPlistFromString(r)
@@ -172,7 +179,7 @@ def mount_image(dmg):
         if p and os.path.exists(p):
             return p
 
-    raise ValueError('Failed to mount %s' % dmg)
+    raise Exception('Failed to mount %s' % dmg)
 
 
 def mount_and_install(dmg, pkg):

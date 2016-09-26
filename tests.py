@@ -5,8 +5,8 @@ import logging
 import subprocess
 from unittest import main, skip, TestCase
 
-import functions as mh
-import system_profiler
+import machammer.functions as mh
+from machammer import system_profiler
 
 
 class SystemProfilerTestCase(TestCase):
@@ -67,6 +67,10 @@ class FunctionsTestCase(TestCase):
 
     def test_remove_login_item(self):
         mh.remove_login_item(path=self.stickes)
+
+    def test_mount_image(self):
+        p = mh.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
+        self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-__all__         = ['']
+__all__         = ['functions', 'printers', 'system_profiler']
 __title__       = 'machammer'
 __author__      = 'Filipp Lepalaan'
 __version__     = '0.1'

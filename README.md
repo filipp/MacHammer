@@ -57,6 +57,56 @@ Save that in `install.py` (or whatever you want) and just run with `sudo python 
 
     Pro tip: put install.py under version control!
 
+### Reusing admin tasks
+
+Just name your admin tasks as functions. For example, this will install AutoCAD LT 2016 and all the patches:
+
+```python
+def install_autocad():
+    mh.mount_and_install(os.path.join(APP_ROOT, 'AutoCAD/Autodesk AutoCAD LT 2016 for Mac Installation.dmg'),
+                         'Install Autodesk AutoCAD LT 2016 for Mac.pkg')
+    for x in xrange(1, 4):
+        mh.mount_and_install(os.path.join(APP_ROOT, 'AutoCAD/AutoCADLT2016Update%d.dmg' % x),
+                             'AutoCADLT2016Update%d.pkg' % x)
+```
+
+Since this is all just pure Python, feel free to put your Linux admin tasks in there as well. For instance, to update all your Maxwell rendernodes:
+
+```python
+def update_render_nodes():
+    for n in range(1, 11):
+        installer = os.path.join(APP_ROOT, 'Maxwell/Maxwell_3.2.1.5')
+        subprocess.call('ssh', 'admin@render%d.example.com' % d, 'killall mxnetwork;' + installer)
+```
+
+The above Linux example assumes you've configured your nodes to mount the fileshare the same way as your Macs (under /Volumes). You can run it from your admin Mac.
+
+
+### Making install.py more "modular"
+
+Sometimes you just want to run parts of `install.py`. By adding this snippet to the end of `install.py`:
+
+
+```python
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        for x in sys.argv[1:]:
+            try:
+                locals()[x]()
+            except KeyError as e:
+                mh.log('Function not found: %s' % x)
+
+        sys.exit(0)
+```
+
+... you can call your named admin tasks (functions) simply providing their names on the command line:
+
+
+```bash
+$ python install.py install_autocad update_render_nodes
+```
+
+
 ### system_profiler
 
 `machammer` includes `system_profiler` - a small wrapper around OS X's `system_profiler (1)` tool. It provides a simple API for accessing system profile information as well as caching to improve performance (especially when dealing with application profile data).
