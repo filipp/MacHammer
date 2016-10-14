@@ -13,12 +13,32 @@ from system_profiler import SystemProfile
 SERVICEDIR = '/Library/Services'
 
 
+def get_plist(path):
+    """Return plist dict regardless of format.
+
+    """
+    plist = subprocess.check_output(['/usr/bin/plutil',
+                                     '-convert', 'xml1',
+                                     path, '-o', '-'])
+    return plistlib.readPlistFromString(plist)
+
+
 def call(*args):
     """Shorthand for subprocess.call.
 
     > call('ls', '/Users')
     """
     subprocess.call(args)
+
+
+def check_output(*args):
+    """Shortcut for subprocess.check_output."""
+    result = subprocess.check_output(args).strip()
+
+    if len(result) < 1:
+        result = None
+
+    return result
 
 
 def rmdir(path):
@@ -62,11 +82,14 @@ def exec_jar(path, user):
 
 
 def osascript(s):
-    subprocess.call(['/usr/bin/osascript', '-e', s])
+    try:
+        return check_output('/usr/bin/osascript', '-e', s)
+    except Exception as e:
+        raise Exception('The AppleScript returned an error: %s' % e)
 
 
 def tell_app(app, s):
-    osascript('tell application "%s" to %s' % (app, s))
+    return osascript('tell application "%s" to %s' % (app, s))
 
 
 def quit_app(app):

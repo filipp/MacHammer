@@ -6,7 +6,7 @@ import subprocess
 from unittest import main, skip, TestCase
 
 import machammer.functions as mh
-from machammer import system_profiler
+from machammer import system_profiler, screensaver
 
 
 class SystemProfilerTestCase(TestCase):
@@ -71,6 +71,19 @@ class FunctionsTestCase(TestCase):
     def test_mount_image(self):
         p = mh.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
         self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
+
+
+class ScreenSaverTestCase(TestCase):
+    def test_set_invalid(self):
+        with self.assertRaises(Exception):
+            screensaver.set('Blalala')
+
+    def test_set_flurry(self):
+        self.assertEquals(screensaver.set('Flurry'), None)
+
+
+    def test_get(self):
+        self.assertEquals(screensaver.get(), 'Flurry')
 
 
 if __name__ == '__main__':

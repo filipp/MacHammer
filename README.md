@@ -32,7 +32,8 @@ myprinter = ('LaserWriter 8500', 'LaserWriter8500.ppd', 'lw.example.com',)
 printers.add_printer(myprinter)
 
 # Install Java. mount_and_install takes 2 arguments - the path to the disk image and the path to installation package on the mounted volume
-mh.mount_and_install(os.path.join(APP_ROOT, 'jre-8u101-macosx-x64.dmg'), 'Java 8 Update 101.app/Contents/Resources/JavaAppletPlugin.pkg')
+mh.mount_and_install(os.path.join(APP_ROOT, 'jre-8u101-macosx-x64.dmg'), 
+                     'Java 8 Update 101.app/Contents/Resources/JavaAppletPlugin.pkg')
 
 # Install Microsoft Office. mount_image returns the path to the new mountpoint
 p = mh.mount_image('/Volumes/MyShare/Installation/Office2016.dmg')
