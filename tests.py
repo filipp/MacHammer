@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import time
 import logging
 import subprocess
 from unittest import main, skip, TestCase
 
-import machammer.functions as mh
+from machammer import network
+from machammer import functions as mh
 from machammer import system_profiler, screensaver
 
 
@@ -36,6 +38,28 @@ class SystemProfilerTestCase(TestCase):
     def testOsVersionShortcut(self):
         build = subprocess.check_output(['sw_vers', '-buildVersion']).strip()
         self.assertTrue(build in system_profiler.get('Software', 'os_version'))
+
+
+class NetworkTestCase(TestCase):
+    def test_wifi_enable(self):
+        """Turn wifi power on, check that it's on"""
+        network.set_wifi_power(True)
+        time.sleep(3)
+        self.assertTrue(network.get_wifi_power())
+
+    def test_wired(self):
+        self.assertTrue(network.is_wired())
+
+    def test_wifi_disable(self):
+        network.set_wifi_power(False)
+        time.sleep(3)
+        self.assertTrue(not network.get_wifi_power())
+
+    def test_primary(self):
+        self.assertEqual(network.get_primary(), 'en4')
+
+    def test_primary_wired(self):
+        self.assertTrue(network.is_wired(True))
 
 
 class AppsTestCase(TestCase):
@@ -71,6 +95,10 @@ class FunctionsTestCase(TestCase):
     def test_mount_image(self):
         p = mh.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
         self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
+
+    @skip('This works, trust me.')
+    def test_sleep(self):
+        mh.sleep()
 
 
 class ScreenSaverTestCase(TestCase):
