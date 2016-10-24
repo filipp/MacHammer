@@ -173,6 +173,11 @@ def enable_ard(username):
                      '-restart', '-agent'])
 
 
+def sleep():
+    """Put this Mac to sleep"""
+    tell_app('Finder', 'sleep')
+
+
 def is_laptop():
     profile = SystemProfile('Hardware')
     return 'Book' in profile.machine_model
