@@ -6,7 +6,7 @@ import logging
 import subprocess
 from unittest import main, skip, TestCase
 
-from machammer import network
+from machammer import network, users
 from machammer import functions as mh
 from machammer import system_profiler, screensaver
 
@@ -87,10 +87,10 @@ class FunctionsTestCase(TestCase):
         mh.display_notification('blaaa "lalala"')
 
     def test_add_login_item(self):
-        mh.add_login_item(self.stickes)
+        users.add_login_item(self.stickes)
 
     def test_remove_login_item(self):
-        mh.remove_login_item(path=self.stickes)
+        users.remove_login_item(path=self.stickes)
 
     def test_mount_image(self):
         p = mh.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
@@ -108,7 +108,6 @@ class ScreenSaverTestCase(TestCase):
 
     def test_set_flurry(self):
         self.assertEquals(screensaver.set('Flurry'), None)
-
 
     def test_get(self):
         self.assertEquals(screensaver.get(), 'Flurry')
