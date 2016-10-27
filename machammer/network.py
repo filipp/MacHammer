@@ -32,7 +32,11 @@ def get_wifi_power():
 def is_wired(primary=False):
     """Do we have an "active" Ethernet connection?"""
     for p in get_ports('Ethernet'):
-        r = check_output('/sbin/ifconfig', p['interface'])
+        try:
+            r = check_output('/sbin/ifconfig', p['interface'])
+        except Exception as e:
+            raise Exception('Failed to get interface status: %s' % e)
+
         active = 'status: active' in r
         return get_primary(p['interface']) if primary else active
 
