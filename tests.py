@@ -96,6 +96,10 @@ class FunctionsTestCase(TestCase):
         p = mh.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
         self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
 
+    def test_create_media(self):
+        mh.create_os_media('/Applications/Install macOS Sierra.app',
+                           '/Volumes/Untitled')
+
     @skip('This works, trust me.')
     def test_sleep(self):
         mh.sleep()

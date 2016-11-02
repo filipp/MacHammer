@@ -117,7 +117,7 @@ def enable_ard(username):
 
 
 def sleep():
-    """Put this Mac to sleep"""
+    """Put this Mac to sleep."""
     tell_app('Finder', 'sleep')
 
 
@@ -191,8 +191,8 @@ def install_su(restart=True):
 
 
 def disable_wifi(port='en1'):
-    subprocess.call(['/usr/sbin/networksetup', '-setairportpower', port, 'off'])
-    subprocess.call(['/usr/sbin/networksetup', '-setnetworkserviceenabled', 'Wi-Fi', 'off'])
+    call('/usr/sbin/networksetup', '-setairportpower', port, 'off')
+    call('/usr/sbin/networksetup', '-setnetworkserviceenabled', 'Wi-Fi', 'off')
 
 
 def log(msg):
@@ -205,3 +205,13 @@ def install_service(src):
         os.mkdir(SERVICEDIR)
 
     ditto(src, SERVICEDIR)
+
+
+def clear_xattr(path):
+    """Clear all extended attributes on path."""
+    call('/usr/bin/xattr', '-c', path)
+
+
+def create_os_media(src, dst):
+    fp = os.path.join(src, 'Contents/Resources/createinstallmedia')
+    call(fp, '--volume', dst, '--applicationpath', src, '--nointeraction')
