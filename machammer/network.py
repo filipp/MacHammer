@@ -19,7 +19,7 @@ def set_wifi_power(on=True):
 
 
 def get_wifi_power():
-    """Get AirPort power state"""
+    """Get AirPort power state."""
     results = []
     for i in get_ports('AirPort'):
         iface = i['interface']
@@ -55,3 +55,8 @@ def get_primary(port=None):
     for i in [x for x in route if 'interface: ' in x]:
         p = i.split(': ')[1]
         return p == port if port else p
+
+
+def flush_dns():
+    """Flush the DNS cache."""
+    call('/usr/bin/killall', '-HUP', 'mDNSResponder')

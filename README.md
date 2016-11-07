@@ -1,6 +1,6 @@
 ### Introduction
 
-`machammer` is library/microframework for Macintosh system administration. The idea is to provide a set of common, often-used functions for admins to build their own management tools.
+`machammer` is library/microframework for Macintosh system administration. It provides a set of common, often-used functions for admins to build their own management tools.
 
 
 ### System Requirements
@@ -133,6 +133,8 @@ Check `tests.py` for more usage examples.
 * A: It's true that most of this stuff is just glue to various command line utilities and using Bash might save some keystrokes, but Python is just a much better programming language with an actual standard library. 
 * Q: Why not use Munki?
 * A: No reason whatsoever. Munki is great and you should totally use it, if it works for you. I just prefer to read and write code than learn a new XML syntax. For me personally, it was difficult to "start small" with Munki - there's a lot you have to learn to get started. Also, there are plenty of apps out there that don't conform to the standard PKG/app bundle format (like the ArchiCAD example above) and your best bet at tackling those is just plain-old scripting. To paraphrase Einstein - an installation tool might take you from A to B, but scripting can take you anywhere. :-)
+
+[![Documentation Status](https://readthedocs.org/projects/machammer/badge/?version=latest)](http://machammer.readthedocs.io/en/latest/?badge=latest)
 
 
 ### License
