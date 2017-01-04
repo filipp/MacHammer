@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import plistlib
 import subprocess
-import sys
 import tempfile
 
 from xml.parsers.expat import ExpatError
@@ -78,7 +78,7 @@ def exec_jar(path, user):
     if not os.path.exists(javapath):
         raise ValueError('Looks like your machine does not have Java installed')
 
-    subprocess.call(['/bin/launchctl', 'asuser', user, javapath, '-jar', path, '-silent'])
+    call('/bin/launchctl', 'asuser', user, javapath, '-jar', path, '-silent')
 
 
 def osascript(s):
@@ -146,7 +146,7 @@ def mount_image(dmg):
     except ExpatError:  # probably a EULA-image, return None instead of breaking
         return None
 
-    for p in [p.get('mount-point') for p in plist.get('system-entities')]:
+    for p in [x.get('mount-point') for x in plist.get('system-entities')]:
         if p and os.path.exists(p):
             return p
 
@@ -173,7 +173,8 @@ def mount_afp(url, username, password, mountpoint=None):
     """Mount AFP share."""
     if mountpoint is None:
         mountpoint = tempfile.mkdtemp()
-    subprocess.call(['/sbin/mount_afp', 'afp://%s:%s@%s' % (username, password, url), mountpoint])
+    url = 'afp://%s:%s@%s' % (username, password, url)
+    call('/sbin/mount_afp', url, mountpoint)
     return mountpoint
 
 
@@ -183,7 +184,7 @@ def umount(path):
 
 
 def install_su(restart=True):
-    """Install all available Apple software Updates, restart if update requires it."""
+    """Install all available Apple software Updates, restart if any update requires it."""
     su_results = subprocess.check_output(['/usr/sbin/softwareupdate', '-ia'])
     if restart and ('restart' in su_results):
         tell_app('Finder', 'restart')

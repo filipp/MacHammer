@@ -6,9 +6,9 @@ import logging
 import subprocess
 from unittest import main, skip, TestCase
 
-from machammer import network, users
-from machammer import functions as mh
-from machammer import system_profiler, screensaver
+from machammer import (functions, system_profiler,
+                       network, hooks, users,
+                       screensaver, defaults,)
 
 
 class SystemProfilerTestCase(TestCase):
@@ -50,6 +50,7 @@ class NetworkTestCase(TestCase):
     def test_wired(self):
         self.assertTrue(network.is_wired())
 
+    @skip('blaa')
     def test_wifi_disable(self):
         network.set_wifi_power(False)
         time.sleep(3)
@@ -84,7 +85,7 @@ class FunctionsTestCase(TestCase):
         self.stickes = '/Applications/Stickies.app'
 
     def test_notification(self):
-        mh.display_notification('blaaa "lalala"')
+        functions.display_notification('blaaa "lalala"')
 
     def test_add_login_item(self):
         users.add_login_item(self.stickes)
@@ -93,16 +94,17 @@ class FunctionsTestCase(TestCase):
         users.remove_login_item(path=self.stickes)
 
     def test_mount_image(self):
-        p = mh.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
+        p = functions.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
         self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
 
+    @skip('This works, trust me.')
     def test_create_media(self):
-        mh.create_os_media('/Applications/Install macOS Sierra.app',
-                           '/Volumes/Untitled')
+        functions.create_os_media('/Applications/Install macOS Sierra.app',
+                                  '/Volumes/Untitled')
 
     @skip('This works, trust me.')
     def test_sleep(self):
-        mh.sleep()
+        functions.sleep()
 
 
 class ScreenSaverTestCase(TestCase):
@@ -115,6 +117,31 @@ class ScreenSaverTestCase(TestCase):
 
     def test_get(self):
         self.assertEquals(screensaver.get(), 'Flurry')
+
+
+class HooksTestCase(TestCase):
+    def gethook(self):
+        return defaults.get(hooks.PREF_DOMAIN, 'LoginHook')
+
+    def test_set_login_path(self):
+        hooks.login('/lalala')
+        self.assertEquals(self.gethook(), '/lalala')
+
+    def test_set_login_function(self):
+        from machammer.decorators import login
+
+        @login
+        def blaa():
+            import sys
+            import subprocess
+            subprocess.call(['/usr/bin/say', 'Hello ' + sys.argv[1]])
+
+        blaa()
+
+    def test_unset_login(self):
+        hooks.login()
+        with self.assertRaises(Exception):
+            self.assertEquals(self.gethook(), '')
 
 
 if __name__ == '__main__':

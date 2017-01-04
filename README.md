@@ -107,6 +107,22 @@ if __name__ == '__main__':
 $ python install.py install_autocad update_render_nodes
 ```
 
+### Login hooks and decorators
+
+`machammer` allows you to execute Python code as login hooks. Just use the `@login` decorator on your loginhook function:
+
+
+```python
+from machammer.decorators import login
+
+@login
+def sayhello():
+    import sys
+    import subprocess
+    subprocess.call(['/usr/bin/say', 'Hello ' + sys.argv[1]])
+
+sayhello()
+```
 
 ### system_profiler
 
