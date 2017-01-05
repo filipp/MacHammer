@@ -127,7 +127,7 @@ class HooksTestCase(TestCase):
         hooks.login('/lalala')
         self.assertEquals(self.gethook(), '/lalala')
 
-    def test_set_login_function(self):
+    def test_set_login_decorator(self):
         from machammer.decorators import login
 
         @login
@@ -137,6 +137,7 @@ class HooksTestCase(TestCase):
             subprocess.call(['/usr/bin/say', 'Hello ' + sys.argv[1]])
 
         blaa()
+        self.assertEquals(self.gethook(), '/var/root/Library/mh_loginhook.py')
 
     def test_unset_login(self):
         hooks.login()

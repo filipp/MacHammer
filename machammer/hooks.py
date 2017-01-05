@@ -29,3 +29,15 @@ def reboot(path=None):
 def shutdown(path=None):
     """Set shutdown hook to path, or disable shutdown hook."""
     pass
+
+
+def mount(mountpoint, path=None):
+    """Execute path if mountpoint is mounted. Set path to None to disable."""
+    label = 'com.github.filipp.machammer.mounthook'
+    defaults.set('/Library/LaunchAgents/%s' % label, 'Label', label)
+    defaults.set('/Library/LaunchAgents/%s' % label, 'Program', path)
+    defaults.set('/Library/LaunchAgents/%s' % label, 'StartOnMount',
+                 '-boolean',
+                 'TRUE')
+    defaults.set('/Library/LaunchAgents/%s' % label, 'WatchPaths', '-array',
+                 mountpoint)
