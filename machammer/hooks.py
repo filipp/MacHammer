@@ -34,10 +34,17 @@ def shutdown(path=None):
 def mount(mountpoint, path=None):
     """Execute path if mountpoint is mounted. Set path to None to disable."""
     label = 'com.github.filipp.machammer.mounthook'
-    defaults.set('/Library/LaunchAgents/%s' % label, 'Label', label)
-    defaults.set('/Library/LaunchAgents/%s' % label, 'Program', path)
-    defaults.set('/Library/LaunchAgents/%s' % label, 'StartOnMount',
-                 '-boolean',
-                 'TRUE')
-    defaults.set('/Library/LaunchAgents/%s' % label, 'WatchPaths', '-array',
-                 mountpoint)
+    plist = '/Library/LaunchDaemons/' + label
+    defaults.set(plist, 'Label', label)
+    defaults.set(plist, 'Program', path)
+    defaults.set(plist, 'StartOnMount', '-boolean', 'TRUE')
+    defaults.set(plist, 'WatchPaths', '-array', mountpoint)
+
+
+def agent(path=None):
+    """Execute path if mountpoint is mounted. Set path to None to disable."""
+    label = 'com.github.filipp.machammer.loginhook'
+    plist = '/Library/LaunchAgents/' + label
+    defaults.set(plist, 'Label', label)
+    defaults.set(plist, 'Program', path)
+    defaults.set(plist, 'RunAtLoad', '-boolean', 'TRUE')

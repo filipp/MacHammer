@@ -2,9 +2,10 @@
 
 import os
 import sys
+import logging
 import plistlib
-import subprocess
 import tempfile
+import subprocess
 
 from xml.parsers.expat import ExpatError
 from system_profiler import SystemProfile
@@ -60,12 +61,12 @@ def display_notification(msg, title='', subtitle=''):
 
 def ditto(src, dst):
     """Shortcut for ditto."""
-    subprocess.call(['/usr/bin/ditto', src, dst])
+    call('/usr/bin/ditto', src, dst)
 
 
 def rsync(src, dst, flags='auE'):
     """Shortcut for rsync."""
-    subprocess.call(['/usr/bin/rsync', '-' + flags, src, dst])
+    call('/usr/bin/rsync', '-' + flags, src, dst)
 
 
 def dscl(domain='.', *args):
@@ -76,7 +77,7 @@ def dscl(domain='.', *args):
 def exec_jar(path, user):
     javapath = '/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java'
     if not os.path.exists(javapath):
-        raise ValueError('Looks like your machine does not have Java installed')
+        raise Exception('Looks like your machine does not have Java installed')
 
     call('/bin/launchctl', 'asuser', user, javapath, '-jar', path, '-silent')
 
@@ -136,25 +137,25 @@ def mount_image(dmg):
                          stdout=subprocess.PIPE,
                          stdin=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-    r, e = p.communicate(input=b'Q\nY\n')
+    # work around EULA prompt
+    out, err = p.communicate(input=b'Q\nY\n')
+    logging.debug('mount_image got %s' % out)
 
-    if e:
-        raise Exception(e)
+    if err:
+        raise Exception(err)
 
     try:
-        plist = plistlib.readPlistFromString(r)
-    except ExpatError:  # probably a EULA-image, return None instead of breaking
-        return None
-
-    for p in [x.get('mount-point') for x in plist.get('system-entities')]:
-        if p and os.path.exists(p):
-            return p
-
-    raise Exception('Failed to mount %s' % dmg)
+        _, xml = out.split('<?xml version="1.0" encoding="UTF-8"?>')
+        plist = plistlib.readPlistFromString(xml)
+        for p in [x.get('mount-point') for x in plist.get('system-entities')]:
+            if p and os.path.exists(p):
+                return p
+    except ExpatError:
+        raise Exception('Failed to mount %s' % dmg)
 
 
 def mount_and_install(dmg, pkg):
-    """Mountsthe DMG and installs the PKG."""
+    """Mounts the DMG and installs the PKG."""
     p = mount_image(dmg)
     install_pkg(os.path.join(p, pkg))
 
@@ -166,7 +167,15 @@ def install_profile(path):
 
 def install_pkg(pkg, target='/'):
     """Install a package."""
-    subprocess.call(['/usr/sbin/installer', '-pkg', pkg, '-target', target])
+    call('/usr/sbin/installer', '-pkg', pkg, '-target', target)
+
+
+def mount_url(url):
+    """Mount disk image from URL.
+    Return path to mounted volume."""
+    if url.startswith('http'):
+        p = curl(url)
+        return mount_image(p)
 
 
 def mount_afp(url, username, password, mountpoint=None):
@@ -180,11 +189,12 @@ def mount_afp(url, username, password, mountpoint=None):
 
 def umount(path):
     """Unmount path."""
-    subprocess.call(['/sbin/umount', path])
+    call('/sbin/umount', path)
 
 
 def install_su(restart=True):
-    """Install all available Apple software Updates, restart if any update requires it."""
+    """Install all available Apple software Updates,
+    restart if any update requires it."""
     su_results = subprocess.check_output(['/usr/sbin/softwareupdate', '-ia'])
     if restart and ('restart' in su_results):
         tell_app('Finder', 'restart')
@@ -192,12 +202,9 @@ def install_su(restart=True):
 
 
 def disable_wifi(port='en1'):
-    call('/usr/sbin/networksetup', '-setairportpower', port, 'off')
-    call('/usr/sbin/networksetup', '-setnetworkserviceenabled', 'Wi-Fi', 'off')
-
-
-def log(msg):
-    print('*** %s...' % msg)
+    ns = '/usr/sbin/networksetup'
+    call(ns, '-setairportpower', port, 'off')
+    call(ns, '-setnetworkserviceenabled', 'Wi-Fi', 'off')
 
 
 def install_service(src):
@@ -216,3 +223,14 @@ def clear_xattr(path):
 def create_os_media(src, dst):
     fp = os.path.join(src, 'Contents/Resources/createinstallmedia')
     call(fp, '--volume', dst, '--applicationpath', src, '--nointeraction')
+
+
+def curl(url, *args):
+    """Fetch URL with curl"""
+    dst = tempfile.NamedTemporaryFile(delete=False)
+    call('/usr/bin/curl', url, '-o', dst.name, '--silent', *args)
+    return dst.name
+
+
+def log(msg):
+    print('*** %s...' % msg)

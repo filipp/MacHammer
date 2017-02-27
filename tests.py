@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import time
 import logging
 import subprocess
@@ -106,6 +107,14 @@ class FunctionsTestCase(TestCase):
     def test_sleep(self):
         functions.sleep()
 
+    def test_curl(self):
+        p = functions.curl(os.getenv('MH_URL'))
+        print(p)
+
+    def test_mount_url(self):
+        p = functions.mount_url(os.getenv('MH_URL'))
+        self.assertTrue(os.path.isdir(p))
+
 
 class ScreenSaverTestCase(TestCase):
     def test_set_invalid(self):
@@ -138,6 +147,9 @@ class HooksTestCase(TestCase):
 
         blaa()
         self.assertEquals(self.gethook(), '/var/root/Library/mh_loginhook.py')
+
+    def test_launchagent(self):
+        pass
 
     def test_unset_login(self):
         hooks.login()
