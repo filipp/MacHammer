@@ -9,7 +9,31 @@ from unittest import main, skip, TestCase
 
 from machammer import (functions, system_profiler,
                        network, hooks, users,
-                       screensaver, defaults,)
+                       screensaver, defaults,
+                       printers, process,)
+
+
+class PrintersTestCase(TestCase):
+    def test_delete_printers(self):
+        printers.delete_printers()
+
+
+class ProcessTestCase(TestCase):
+    def setUp(self):
+        self.appname = 'Stickies'
+
+    def test_kill(self):
+        process.kill(self.appname)
+        self.assertFalse(process.is_running(self.appname))
+
+    def test_open(self):
+        process.open(self.appname)
+        self.assertTrue(process.is_running(self.appname))
+
+    def test_activate(self):
+        process.activate(self.appname)
+        time.sleep(2)
+        self.assertTrue(process.is_active(self.appname))
 
 
 class SystemProfilerTestCase(TestCase):

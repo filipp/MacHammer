@@ -6,9 +6,9 @@ import logging
 import plistlib
 import tempfile
 import subprocess
-
 from xml.parsers.expat import ExpatError
-from system_profiler import SystemProfile
+
+from .system_profiler import SystemProfile
 
 
 SERVICEDIR = '/Library/Services'
@@ -25,11 +25,25 @@ def get_plist(path):
 
 
 def call(*args):
-    """Shorthand for subprocess.call.
+    """Shortcut for subprocess.call.
 
     > call('ls', '/Users')
     """
     subprocess.call(args)
+
+
+def popen(cmd, input=None):
+    """Shortcut for Popen/communicate()."""
+    proc = subprocess.Popen(cmd,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    (res, err) = proc.communicate(input)
+
+    if err:
+        raise Exception(err)
+
+    return res
 
 
 def check_output(*args):
@@ -44,7 +58,7 @@ def check_output(*args):
 
 def rmdir(path):
     """Shortcut for deleting a directory."""
-    call('rm', '-r', path)
+    call('/bin/rm', '-r', path)
 
 
 def display_notification(msg, title='', subtitle=''):
@@ -201,12 +215,6 @@ def install_su(restart=True):
         sys.exit(0)
 
 
-def disable_wifi(port='en1'):
-    ns = '/usr/sbin/networksetup'
-    call(ns, '-setairportpower', port, 'off')
-    call(ns, '-setnetworkserviceenabled', 'Wi-Fi', 'off')
-
-
 def install_service(src):
     """Copy .service to systemwide Services folder."""
     if not os.path.exists(SERVICEDIR):
@@ -233,4 +241,4 @@ def curl(url, *args):
 
 
 def log(msg):
-    print('*** %s...' % msg)
+    logging.debug(msg)
