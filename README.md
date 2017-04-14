@@ -124,6 +124,16 @@ def sayhello():
 sayhello()
 ```
 
+### Running with scissors
+
+An extreme example - say you have a Mac with nothing more than an admin account with ARD access and you want to create a new user account. Here's one way to do it using `machammer`:
+
+Remote Desktop > Send UNIX command (as root):
+
+```
+curl -o /tmp/machammer.zip http://machammer.org/machammer.zip && echo -e 'from machammer import users\nusers.create_user("John Appleseed", "supersecret")' | PYTHONPATH=/tmp/machammer.zip python
+```
+
 ### system_profiler
 
 `machammer` includes `system_profiler` - a small wrapper around OS X's `system_profiler (1)` tool. It provides a simple API for accessing system profile information as well as caching to improve performance (especially when dealing with application profile data).
