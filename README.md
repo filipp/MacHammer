@@ -131,7 +131,7 @@ An extreme example - say you have a Mac with nothing more than an admin account 
 Remote Desktop > Send UNIX command (as root):
 
 ```
-curl -o /tmp/machammer.zip http://machammer.org/machammer.zip && echo -e 'from machammer import users\nusers.create_user("John Appleseed", "supersecret")' | PYTHONPATH=/tmp/machammer.zip python
+PYTHONPATH="/tmp/machammer.zip" curl -o $PYTHONPATH http://machammer.org/machammer.zip && echo -e 'from machammer import users\nusers.create_user("John Appleseed", "supersecret")' | python
 ```
 
 ### system_profiler
