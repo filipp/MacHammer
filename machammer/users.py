@@ -1,11 +1,31 @@
 # -*- coding: utf-8 -*-
 """machammer.users."""
 
+import re
 import os
+import logging
 import plistlib
 import subprocess
 
-from .functions import tell_app
+from .functions import tell_app, check_output, call
+
+
+def dscl(*args):
+    """Shortcut for accessing the local DS."""
+    return check_output('/usr/bin/dscl', '.', *args)
+
+
+def get_info(username):
+    path = '/Users/' + username
+    s = check_output('/usr/bin/dscl', '-plist', '.', 'read', path)
+    return plistlib.readPlistFromString(s)
+
+
+def nextid(node='/Users', attr='UniqueID'):
+    """Return next available ID for DS node/attribute."""
+    s = dscl('-list', node, attr)
+    ids = re.split(r'\s+', s)[1::2]
+    return max([int(x) for x in ids]) + 1
 
 
 def add_login_item(path, name=None, hidden=True):
@@ -14,8 +34,8 @@ def add_login_item(path, name=None, hidden=True):
         name = os.path.basename(path)
 
     hidden = 'true' if hidden else 'false'
-    tell_app('System Events',
-             'make login item at end with properties {path:"%s", hidden:%s, name:"%s"}' % (path, hidden, name))
+    cmd = 'make login item at end with properties {path:"%s", hidden:%s, name:"%s"}'
+    tell_app('System Events', cmd % (path, hidden, name))
 
 
 def remove_login_item(**kwargs):
@@ -30,23 +50,39 @@ def remove_login_item(**kwargs):
     tell_app('System Events', 'delete every login item whose %s is "%s"' % (k, v))
 
 
-def create_user(username, realname, password):
+def create_user(realname, password, username=None, uid=None, gid=20):
     """Create a user account."""
-    os.system("""dscl . create /Users/{0}
-                 dscl . create /Users/{0} RealName "{1}"
-                 dscl . passwd /Users/{0} {2}
-                 dscl . create /Users/{0} UniqueID 501
-                 dscl . create /Users/{0} PrimaryGroupID 80
-                 dscl . create /Users/{0} UserShell /bin/bash
-                 dscl . create /Users/{0} NFSHomeDirectory /Users/{0}
-                 cp -R /System/Library/User\ Template/English.lproj /Users/{0}
-                 chown -R {0}:staff /Users/{0}""".format(username, realname, password))
+    if uid is None:
+        uid = nextid()
+
+    if gid is None:
+        gid = nextid('/Groups', 'PrimaryGroupID')
+
+    if username is None:
+        username = realname.lower().replace(' ', '.')
+
+    path = '/Users/' + username
+    dscl('create', path)
+    dscl('create', path, 'RealName', realname)
+    dscl('create', path, 'UniqueID', uid)
+    dscl('create', path, 'PrimaryGroupID', gid)
+    dscl('create', path, 'UserShell', '/bin/bash')
+    dscl('create', path, 'NFSHomeDirectory', path)
+
+    dscl('passwd', path, password)
+
+    template = '/System/Library/User Template/'
+    call('/usr/bin/ditto', template + 'English.lproj/', path)
+    call('/usr/bin/ditto', template + 'Non_localized/', path)
+    call('/usr/sbin/chown', '-R', username + ':staff', path)
+
+    return get_info(username)
 
 
 def hide_user(username, hide_home=True):
     """Hide a user account."""
     path = '/Users/%s' % username
-    subprocess.call(['dscl', '.', 'create', path, 'IsHidden', '1'])
+    dscl('create', path, 'IsHidden', '1')
 
     if hide_home:
         subprocess.call(['/usr/bin/chflags', 'hidden', path])
@@ -55,16 +91,16 @@ def hide_user(username, hide_home=True):
 def delete_user(username, delete_home=True):
     """Delete a user account."""
     path = '/Users/' + username
-    dscl = subprocess.check_output(['dscl', '-plist', '.', 'read', path])
-    userinfo = plistlib.readPlistFromString(dscl)
+    userinfo = get_info(username)
 
-    subprocess.call(['dscl', '.', 'delete', path])
+    dscl('delete', path)
 
     if delete_home:
         homedir = userinfo['dsAttrTypeStandard:NFSHomeDirectory'][0]
-        os.rmdir(homedir)
+        logging.debug('Deleting home directory: %s' % homedir)
+        call('/bin/rm', '-r', homedir)
 
 
 def make_admin(username):
     """Give admin rights to username."""
-    subprocess.call(['dscl', '.', '-append', '/Groups/admin', 'users', username])
+    dscl('-append', '/Groups/admin', 'users', username)

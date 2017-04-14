@@ -29,6 +29,7 @@ def call(*args):
 
     > call('ls', '/Users')
     """
+    args = [str(x) for x in args]
     subprocess.call(args)
 
 
@@ -48,6 +49,7 @@ def popen(cmd, input=None):
 
 def check_output(*args):
     """Shortcut for subprocess.check_output."""
+    args = [str(x) for x in args]
     result = subprocess.check_output(args).strip()
 
     if len(result) < 1:

@@ -13,6 +13,23 @@ from machammer import (functions, system_profiler,
                        printers, process,)
 
 
+class UsersTestCase(TestCase):
+    def test_nextid(self):
+        self.assertGreater(users.nextid(), 1)
+
+    def test_create(self):
+        info = users.create_user('Test User', 'testpassword')
+        rn = info['dsAttrTypeStandard:RecordName'][0]
+        self.assertEquals(rn, 'test.user')
+
+    def test_make_admin(self):
+        users.make_admin('test.user')
+
+    def test_delete(self):
+        users.create_user('Test User', 'testpassword')
+        users.delete_user('test.user')
+
+
 class PrintersTestCase(TestCase):
     def test_delete_printers(self):
         printers.delete_printers()
