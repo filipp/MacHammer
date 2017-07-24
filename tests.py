@@ -124,6 +124,7 @@ class AppsTestCase(TestCase):
 
 class FunctionsTestCase(TestCase):
     def setUp(self):
+        self.url = os.getenv('MH_URL')
         self.stickes = '/Applications/Stickies.app'
 
     def test_notification(self):
@@ -136,7 +137,7 @@ class FunctionsTestCase(TestCase):
         users.remove_login_item(path=self.stickes)
 
     def test_mount_image(self):
-        p = functions.mount_image('/Users/filipp/Downloads/AdobeFlashPlayer_22au_a_install.dmg')
+        p = functions.mount_image(os.getenv('MH_IMAGE'))
         self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
 
     @skip('This works, trust me.')
@@ -150,7 +151,7 @@ class FunctionsTestCase(TestCase):
 
     def test_curl(self):
         p = functions.curl(os.getenv('MH_URL'))
-        print(p)
+        self.assertTrue(os.path.exists(p))
 
     def test_mount_url(self):
         p = functions.mount_url(os.getenv('MH_URL'))
@@ -199,5 +200,7 @@ class HooksTestCase(TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    loglevel = logging.DEBUG if os.getenv('MH_DEBUG') else logging.WARNING
+    logging.basicConfig(level=loglevel)
+
     main()

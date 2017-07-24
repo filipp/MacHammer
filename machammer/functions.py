@@ -6,7 +6,6 @@ import logging
 import plistlib
 import tempfile
 import subprocess
-from xml.parsers.expat import ExpatError
 
 from .system_profiler import SystemProfile
 
@@ -123,13 +122,13 @@ def unzip_app(path):
     call('/usr/bin/unzip', '-q', path, '-d', '/Applications')
 
 
-def enable_ard(username):
+def enable_ard(username, privs='-all'):
     """Enable Apple Remote Desktop for username."""
     subprocess.call(['/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart',
                      '-activate', '-configure',
                      '-access', '-on',
                      '-users', username,
-                     '-privs', '-all',
+                     '-privs', privs,
                      '-restart', '-agent'])
 
 
@@ -147,9 +146,13 @@ def is_desktop():
     return not is_laptop()
 
 
-def mount_image(dmg):
+def mount_image(path):
     """Mount disk image and return path to mountpoint."""
-    p = subprocess.Popen(['/usr/bin/hdiutil', 'mount', '-plist', '-nobrowse', dmg],
+    logging.debug('Mounting DMG %s' % path)
+    mp = tempfile.mkdtemp()
+    p = subprocess.Popen(['/usr/bin/hdiutil', 'mount',
+                         '-mountpoint', mp, 
+                         '-nobrowse', path],
                          stdout=subprocess.PIPE,
                          stdin=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -160,14 +163,7 @@ def mount_image(dmg):
     if err:
         raise Exception(err)
 
-    try:
-        _, xml = out.split('<?xml version="1.0" encoding="UTF-8"?>')
-        plist = plistlib.readPlistFromString(xml)
-        for p in [x.get('mount-point') for x in plist.get('system-entities')]:
-            if p and os.path.exists(p):
-                return p
-    except ExpatError:
-        raise Exception('Failed to mount %s' % dmg)
+    return mp
 
 
 def mount_and_install(dmg, pkg):
@@ -192,6 +188,8 @@ def mount_url(url):
     if url.startswith('http'):
         p = curl(url)
         return mount_image(p)
+    
+    raise Exception('URL scheme not supported')
 
 
 def mount_afp(url, username, password, mountpoint=None):
@@ -213,6 +211,7 @@ def install_su(restart=True):
     restart if any update requires it."""
     su_results = subprocess.check_output(['/usr/sbin/softwareupdate', '-ia'])
     if restart and ('restart' in su_results):
+        # Easy way to reboot without special privileges
         tell_app('Finder', 'restart')
         sys.exit(0)
 
@@ -236,10 +235,23 @@ def create_os_media(src, dst):
 
 
 def curl(url, *args):
-    """Fetch URL with curl"""
-    dst = tempfile.NamedTemporaryFile(delete=False)
-    call('/usr/bin/curl', url, '-o', dst.name, '--silent', *args)
-    return dst.name
+    """Fetch URL with curl and return path to download."""
+    args = list(args)
+    if '-o' not in args:
+        dst = tempfile.NamedTemporaryFile(delete=False)
+        of = dst.name
+        args = args + ['-o', of]
+    else:
+        i = args.index('-o')
+        of = args[i+1]
+    
+    if '-v' not in args:
+        args.append('--silent')
+    
+    args.append(url)
+    call('/usr/bin/curl', *args)
+    
+    return of
 
 
 def log(msg):
