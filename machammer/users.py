@@ -16,6 +16,7 @@ def dscl(*args):
 
 
 def get_info(username):
+    """Return info about a user"""
     path = '/Users/' + username
     s = check_output('/usr/bin/dscl', '-plist', '.', 'read', path)
     return plistlib.readPlistFromString(s)
@@ -52,6 +53,8 @@ def remove_login_item(**kwargs):
 
 def create_user(realname, password, username=None, uid=None, gid=20):
     """Create a user account."""
+    assert os.getuid() == 0, "Only root can create users"
+    
     if uid is None:
         uid = nextid()
 
@@ -90,6 +93,8 @@ def hide_user(username, hide_home=True):
 
 def delete_user(username, delete_home=True):
     """Delete a user account."""
+    assert os.getuid() == 0, "Only root can delete users"
+    
     path = '/Users/' + username
     userinfo = get_info(username)
 
@@ -103,4 +108,6 @@ def delete_user(username, delete_home=True):
 
 def make_admin(username):
     """Give admin rights to username."""
+    assert os.getuid() == 0, "Only root can modify users"
+    
     dscl('-append', '/Groups/admin', 'users', username)
