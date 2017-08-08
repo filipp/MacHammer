@@ -83,6 +83,14 @@ class SystemProfilerTestCase(TestCase):
 
 
 class NetworkTestCase(TestCase):
+    def test_get_computer_name(self):
+        name = network.get_computer_name()
+        self.assertEquals(name, 'lalalala')
+        
+    def test_fix_computer_name(self):
+        name = network.fix_computer_name('Computer (2)')
+        self.assertEqual(name, 'Computer')
+        
     def test_wifi_enable(self):
         """Turn wifi power on, check that it's on"""
         network.set_wifi_power(True)
