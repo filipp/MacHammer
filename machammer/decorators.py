@@ -5,7 +5,7 @@ import os
 import stat
 import inspect
 
-import hooks
+from . import hooks
 
 APP_SUPPORT_DIR = '/Library/Application Support/'
 APP_ID = 'com.github.filipp.machammer'

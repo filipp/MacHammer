@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import defaults
+from . import defaults
 
 PREF_DOMAIN = 'com.apple.loginwindow'
 

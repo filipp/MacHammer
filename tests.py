@@ -143,10 +143,10 @@ class FunctionsTestCase(TestCase):
 
     def test_remove_login_item(self):
         users.remove_login_item(path=self.stickes)
-
+    
     def test_mount_image(self):
         p = functions.mount_image(os.getenv('MH_IMAGE'))
-        self.assertEquals(p, '/Volumes/Adobe Flash Player Installer')
+        self.assertIn('/var/folders', p)
 
     @skip('This works, trust me.')
     def test_create_media(self):

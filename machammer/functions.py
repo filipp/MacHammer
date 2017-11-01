@@ -146,10 +146,10 @@ def is_desktop():
     return not is_laptop()
 
 
-def mount_image(path):
+def mount_image(path, mp=None):
     """Mount disk image and return path to mountpoint."""
     logging.debug('Mounting DMG %s' % path)
-    mp = tempfile.mkdtemp()
+    mp = mp or tempfile.mkdtemp()
     p = subprocess.Popen(['/usr/bin/hdiutil', 'mount',
                          '-mountpoint', mp, 
                          '-nobrowse', path],
