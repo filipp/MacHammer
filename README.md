@@ -5,7 +5,7 @@
 
 ### System Requirements
 
-- OS X (tested with 10.11)
+- OS X (tested with 10.11-10.13)
 
 
 ### Example
@@ -36,17 +36,17 @@ mh.mount_and_install(os.path.join(APP_ROOT, 'jre-8u101-macosx-x64.dmg'),
                      'Java 8 Update 101.app/Contents/Resources/JavaAppletPlugin.pkg')
 
 # Install Microsoft Office. mount_image returns the path to the new mountpoint
-p = mh.mount_image('/Volumes/MyShare/Installation/Office2016.dmg')
-mh.install_package(os.path.join(p, 'Microsoft_Office_2016_15.23.0_160611_Installer.pkg'))
+with mh.mount(os.path.join(APP_ROOT, 'Office2016.dmg')) as p:
+    mh.install_package(os.path.join(p, 'Microsoft_Office_2016_15.23.0_160611_Installer.pkg'))
 
 # Install ArchiCAD 19
-p = mh.mount_image(os.path.join(APP_ROOT, 'ArchiCAD/19/AC19-3003-INT.dmg'))
-mh.exec_jar(os.path.join(p, '/ArchiCAD Installer.app/Contents/Resources/Java/archive.jar'), 'localadmin')
+with mh.mount(os.path.join(APP_ROOT, 'ArchiCAD/19/AC19-3003-INT.dmg')) as p:
+    mh.exec_jar(os.path.join(p, '/ArchiCAD Installer.app/Contents/Resources/Java/archive.jar'), 'localadmin')
 
 # Install Viscosity on laptops
 if mh.is_laptop():
-    p = mh.mount_image('/Volumes/MyShare/Installation/Viscosity 1.6.6.dmg')
-    mh.copy_app(os.path.join(p, 'Viscosity.app'))
+    with mh.mount('/Volumes/MyShare/Installation/Viscosity 1.6.6.dmg') as p:
+        mh.copy_app(os.path.join(p, 'Viscosity.app'))
 
 mh.display_notification('Installation complete!')
 sys.exit(0)
