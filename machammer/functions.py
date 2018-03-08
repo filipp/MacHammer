@@ -145,7 +145,6 @@ def is_laptop():
 def is_desktop():
     return not is_laptop()
 
-
 def mount_image(path, mp=None, *args):
     """Mount disk image and return path to mountpoint."""
     logging.debug('Mounting image %s' % path)
@@ -160,6 +159,7 @@ def mount_image(path, mp=None, *args):
                          stdout=subprocess.PIPE,
                          stdin=subprocess.PIPE,
                          stderr=subprocess.PIPE)
+
     # work around EULA prompt
     out, err = p.communicate(input=b'Q\nY\n')
     logging.debug('mount_image got %s' % out)
@@ -172,7 +172,7 @@ def mount_image(path, mp=None, *args):
 
 def mount_and_install(dmg, pkg):
     """Mounts the DMG and installs the PKG."""
-    with mount_image(dmg) as p:
+    with mount(dmg) as p:
         install_pkg(os.path.join(p, pkg))
 
 
@@ -241,7 +241,9 @@ def mount(what, where=None):
         raise Exception('Invalid path: %s' % what)
 
     where = mount_image(what, where)
+    
     yield where
+
     eject(where)
 
 

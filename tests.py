@@ -144,6 +144,15 @@ class AppsTestCase(TestCase):
         self.assertTrue(len(results) > 10)
 
 
+class InstallerTestCase(TestCase):
+    def setUp(self):
+        self.pkg = os.getenv('MH_PKG')
+        self.image = os.getenv('MH_IMAGE')
+
+    def test_mount_and_install(self):
+        functions.mount_and_install(self.image, self.pkg)
+
+
 class MountTestCase(TestCase):
     def setUp(self):
         self.mp = None
