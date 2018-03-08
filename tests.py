@@ -13,6 +13,20 @@ from machammer import (functions, system_profiler,
                        printers, process,)
 
 
+class DefaultsTestCase(TestCase):
+    def test_domains(self):
+        domains = defaults.domains()
+        self.assertGreater(len(domains), 1)
+    
+    def test_finder_get(self):
+        finder = process.App('com.apple.Finder')
+        self.assertEqual(finder.prefs.ShowPathbar, True)
+    
+    def test_finder_set(self):
+        finder = process.App('com.apple.Finder')
+        finder.prefs.ShowPathbar = False
+
+
 class UsersTestCase(TestCase):
     def test_nextid(self):
         self.assertGreater(users.nextid(), 1)
@@ -130,6 +144,36 @@ class AppsTestCase(TestCase):
         self.assertTrue(len(results) > 10)
 
 
+class MountTestCase(TestCase):
+    def setUp(self):
+        self.mp = None
+        self.url = os.getenv('MH_URL')
+        self.image = os.getenv('MH_IMAGE')
+
+    def test_local_dmg(self):
+        with functions.mount(self.image) as p:
+            self.assertIn('/var/folders', p)
+
+    def test_mount_url(self):
+        with functions.fetch(self.url, '-L', '-o', self.image) as image:
+            with functions.mount(image) as mp:
+                self.assertTrue(os.path.isdir(mp))
+
+        # output file should still be there when set manually
+        self.assertTrue(os.path.exists(self.image))
+
+    def test_mount_url_temp(self):
+        with functions.fetch(self.url, '-L') as image:
+            self.image = image
+            with functions.mount(image) as mp:
+                self.assertTrue(os.path.isdir(mp))
+                self.mp = mp
+
+        self.assertFalse(os.path.isdir(self.mp))
+        # output file shouldn't be there when not set
+        self.assertFalse(os.path.exists(self.image))
+
+
 class FunctionsTestCase(TestCase):
     def setUp(self):
         self.url = os.getenv('MH_URL')
@@ -143,10 +187,6 @@ class FunctionsTestCase(TestCase):
 
     def test_remove_login_item(self):
         users.remove_login_item(path=self.stickes)
-    
-    def test_mount_image(self):
-        p = functions.mount_image(os.getenv('MH_IMAGE'))
-        self.assertIn('/var/folders', p)
 
     @skip('This works, trust me.')
     def test_create_media(self):
@@ -160,10 +200,6 @@ class FunctionsTestCase(TestCase):
     def test_curl(self):
         p = functions.curl(os.getenv('MH_URL'))
         self.assertTrue(os.path.exists(p))
-
-    def test_mount_url(self):
-        p = functions.mount_url(os.getenv('MH_URL'))
-        self.assertTrue(os.path.isdir(p))
 
 
 class ScreenSaverTestCase(TestCase):

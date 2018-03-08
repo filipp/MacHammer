@@ -6,6 +6,7 @@ import logging
 import plistlib
 import tempfile
 import subprocess
+from contextlib import contextmanager
 
 from .system_profiler import SystemProfile
 
@@ -15,7 +16,6 @@ SERVICEDIR = '/Library/Services'
 
 def get_plist(path):
     """Return plist dict regardless of format.
-
     """
     plist = subprocess.check_output(['/usr/bin/plutil',
                                      '-convert', 'xml1',
@@ -146,13 +146,17 @@ def is_desktop():
     return not is_laptop()
 
 
-def mount_image(path, mp=None):
+def mount_image(path, mp=None, *args):
     """Mount disk image and return path to mountpoint."""
-    logging.debug('Mounting DMG %s' % path)
+    logging.debug('Mounting image %s' % path)
+
+    if path is None or not os.path.exists(path):
+        raise Exception('Invalid path: %s' % path)
+
     mp = mp or tempfile.mkdtemp()
     p = subprocess.Popen(['/usr/bin/hdiutil', 'mount',
                          '-mountpoint', mp, 
-                         '-nobrowse', path],
+                         '-nobrowse', path, *args],
                          stdout=subprocess.PIPE,
                          stdin=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -168,13 +172,13 @@ def mount_image(path, mp=None):
 
 def mount_and_install(dmg, pkg):
     """Mounts the DMG and installs the PKG."""
-    p = mount_image(dmg)
-    install_pkg(os.path.join(p, pkg))
+    with mount_image(dmg) as p:
+        install_pkg(os.path.join(p, pkg))
 
 
 def install_profile(path):
     """Install a configuration profile."""
-    subprocess.call(['/usr/bin/profiles', '-I', '-F', path])
+    call('/usr/bin/profiles', '-I', '-F', path)
 
 
 def install_pkg(pkg, target='/'):
@@ -182,28 +186,79 @@ def install_pkg(pkg, target='/'):
     call('/usr/sbin/installer', '-pkg', pkg, '-target', target)
 
 
-def mount_url(url):
-    """Mount disk image from URL.
-    Return path to mounted volume."""
-    if url.startswith('http'):
-        p = curl(url)
-        return mount_image(p)
-    
-    raise Exception('URL scheme not supported')
+@contextmanager
+def fetch(url, *args):
+    """Fetch URL with curl and return path to download.
+    All args are passed to curl as is"""
+    try:
+        from urlparse import urlparse
+    except ImportError:
+        from urllib.parse import urlparse
+
+    path = None
+    tmp = False
+    args = list(args)
+    url = urlparse(url)
+
+    if not url.scheme in ('http', 'https', 'ftp',):
+        raise Exception('Unsupported URL scheme: %s' % url.scheme)
+
+    if '-o' in args:
+        i = args.index('-o')
+        path = args[i+1]
+    else:
+        tmp = True
+        path = tempfile.NamedTemporaryFile(delete=False).name
+        args += ['-o', path,]
+
+    if '-v' not in args:
+        args.append('--silent')
+
+    args.append(url.geturl())
+    logging.debug('Running curl with %s' % args)
+
+    call('/usr/bin/curl', *args)
+
+    yield path
+
+    if tmp:
+        os.unlink(path)
+        logging.debug('Deleted tempfile %s' % path)
 
 
-def mount_afp(url, username, password, mountpoint=None):
+def mount_afp(url, username, password, mp=None):
     """Mount AFP share."""
-    if mountpoint is None:
-        mountpoint = tempfile.mkdtemp()
+    mp = mp or tempfile.mkdtemp()
     url = 'afp://%s:%s@%s' % (username, password, url)
-    call('/sbin/mount_afp', url, mountpoint)
-    return mountpoint
+    call('/sbin/mount_afp', url, mp)
+    return mp
+
+
+@contextmanager
+def mount(what, where=None):
+    """Shortcut to mount something, somewhere"""
+    if not os.path.exists(what):
+        raise Exception('Invalid path: %s' % what)
+
+    where = mount_image(what, where)
+    yield where
+    eject(where)
 
 
 def umount(path):
     """Unmount path."""
+    if not os.path.isdir(path):
+        raise Exception('Invalid path: %s' % path)
+
     call('/sbin/umount', path)
+
+
+def eject(path):
+    """Eject a path."""
+    if not os.path.isdir(path):
+        raise Exception('Invalid path: %s' % path)
+
+    call('/usr/sbin/diskutil', 'eject', path)
 
 
 def install_su(restart=True):
@@ -232,26 +287,6 @@ def clear_xattr(path):
 def create_os_media(src, dst):
     fp = os.path.join(src, 'Contents/Resources/createinstallmedia')
     call(fp, '--volume', dst, '--applicationpath', src, '--nointeraction')
-
-
-def curl(url, *args):
-    """Fetch URL with curl and return path to download."""
-    args = list(args)
-    if '-o' not in args:
-        dst = tempfile.NamedTemporaryFile(delete=False)
-        of = dst.name
-        args = args + ['-o', of]
-    else:
-        i = args.index('-o')
-        of = args[i+1]
-    
-    if '-v' not in args:
-        args.append('--silent')
-    
-    args.append(url)
-    call('/usr/bin/curl', *args)
-    
-    return of
 
 
 def log(msg):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import plistlib
 from .functions import call, check_output
 
 DEFAULTS_PATH = '/usr/bin/defaults'
@@ -22,3 +23,13 @@ def set(*args):
 
 def delete(*args):
     return defaults('delete', *args)
+
+
+def domains(*args):
+    s = check_output(DEFAULTS_PATH, 'domains').decode()
+    return [i.strip() for i in s.split(',')]
+
+
+def as_dict(domain):
+    s = check_output(DEFAULTS_PATH, 'export', domain, '-')
+    return plistlib.loads(s)
