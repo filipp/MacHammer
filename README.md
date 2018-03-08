@@ -71,7 +71,7 @@ def install_autocad():
                              'AutoCADLT2016Update%d.pkg' % x)
 ```
 
-Since this is all just pure Python, feel free to put your Linux admin tasks in there as well. For instance, to update all your Maxwell rendernodes:
+Since this is all just pure Python, feel free to put your Linux admin tasks in there as well. For instance, to update all your Maxwell render nodes:
 
 ```python
 def update_render_nodes():
@@ -155,10 +155,14 @@ Check `tests.py` for more usage examples.
 
 ### FAQ
 
+* Q: How do I pass environment variables to Python via sudo?
+* A: use `sudo -E`, for example, if your deployment script (install.py) checks `os.getenv('MH_PKG')`: `MH_PKG=/tmp/blaa.pkg sudo -E python install.py`
+
 * Q: Why not use Bash?
 * A: It's true that most of this stuff is just glue to various command line utilities and using Bash might save some keystrokes, but Python is just a much better programming language with an actual standard library.
+
 * Q: Why not use Munki?
-* A: No reason whatsoever. Munki is great and you should totally use it, if it works for you. I just prefer to read and write code than learn a new XML syntax. For me personally, it was difficult to "start small" with Munki - there's a lot you have to learn to get started. Also, there are plenty of apps out there that don't conform to the standard PKG/app bundle format (like the ArchiCAD example above) and your best bet at tackling those is just plain-old scripting. To paraphrase Einstein - an installation tool might take you from A to B, but scripting can take you anywhere. :-) You can think of `machammer` as a tool to create your own version of Munki.
+* A: No reason whatsoever. Munki is great and you should totally use it, if it works for your use case. I just prefer to read and write code than learn a new XML syntax. For me personally, it was difficult to "start small" with Munki - there's a lot of new concepts you must understand. Also, there are plenty of use cases out there that simply don't conform to the standard PKG/app bundle workflow (like the ArchiCAD example above) and your best bet at tackling those is always just plain-old scripting. To paraphrase Einstein - a high-level tool might take you from A to B, but scripting can take you anywhere. :-) You can think of `machammer` as a tool to create your own version of Munki.
 
 [![Documentation Status](https://readthedocs.org/projects/machammer/badge/?version=latest)](http://machammer.readthedocs.io/en/latest/?badge=latest)
 
