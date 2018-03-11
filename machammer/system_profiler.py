@@ -20,7 +20,9 @@ PROFILER_PATH = '/usr/sbin/system_profiler'
 class SystemProfile(object):
     def __init__(self, dt=DEFAULT_DT):
         types = subprocess.check_output([PROFILER_PATH, '-listDataTypes']).strip()
-        self.types = [x[2:].replace('DataType', '') for x in types.split("\n") if x.startswith('SP')]
+        types = types.decode().split("\n")
+
+        self.types = [x[2:].replace('DataType', '') for x in types if x.startswith('SP')]
         self.types.sort()
 
         if dt not in self.types:

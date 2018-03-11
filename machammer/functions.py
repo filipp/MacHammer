@@ -293,3 +293,44 @@ def create_os_media(src, dst):
 
 def log(msg):
     logging.debug(msg)
+
+
+def os_version():
+    class OsVersion(object):
+        def __init__(self):
+            out = {}
+            for _ in check_output('/usr/bin/sw_vers').decode().split("\n"):
+                (k, v) = _.replace(':', '').split("\t")
+                out[k] = v
+
+            self.name = out['ProductName']
+            self.build = out['BuildVersion']
+            self.version = out['ProductVersion']
+            self._version = self.pad(self.version)
+
+        def pad(self, v):
+            return int(str(v).replace('.', '').ljust(8, '0'))
+
+        def __repr__(self):
+            return '%s (%s)' % (self.version, self.build)
+
+        def __eq__(self, v):
+            return self.version == v
+
+        def __ne__(self, v):
+            return self.version != v
+
+        def __lt__(self, v):
+            return self._version < self.pad(v)
+
+        def __gt__(self, v):
+            print(self._version, self.pad(v))
+            return self._version > self.pad(v)
+
+        def __ge__(self, v):
+            return self._version >= self.pad(v)
+
+        def __str__(self):
+            return self.version
+
+    return OsVersion()

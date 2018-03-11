@@ -137,11 +137,17 @@ class AppsTestCase(TestCase):
 
     def testStickiesVersion(self):
         results = self.profile.find('_name', 'Stickies')
-        self.assertEquals(results[0]['version'], '10.0')
+        if functions.os_version() >= 10.13:
+            self.assertEqual(results[0]['version'], '10.1')
+        else:
+            self.assertEqual(results[0]['version'], '10.0')
 
     def testFindApplications(self):
         results = self.profile.find('path', '/Applications')
         self.assertTrue(len(results) > 10)
+
+    def testSystemVersion(self):
+        self.assertLess(functions.os_version(), 10.14)
 
 
 class InstallerTestCase(TestCase):
