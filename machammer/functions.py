@@ -153,9 +153,9 @@ def mount_image(path, mp=None, *args):
         raise Exception('Invalid path: %s' % path)
 
     mp = mp or tempfile.mkdtemp()
-    p = subprocess.Popen(['/usr/bin/hdiutil', 'mount',
+    p = subprocess.Popen(('/usr/bin/hdiutil', 'mount',
                          '-mountpoint', mp, 
-                         '-nobrowse', path, *args],
+                         '-nobrowse', path) + args,
                          stdout=subprocess.PIPE,
                          stdin=subprocess.PIPE,
                          stderr=subprocess.PIPE)
