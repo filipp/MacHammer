@@ -127,7 +127,7 @@ class NetworkTestCase(TestCase):
         self.assertTrue(network.is_wired(True))
 
 
-class AppsTestCase(TestCase):
+class VersionsTestCase(TestCase):
     def setUp(self):
         self.profile = system_profiler.SystemProfile('Applications')
 
@@ -148,6 +148,34 @@ class AppsTestCase(TestCase):
 
     def testSystemVersion(self):
         self.assertLess(functions.os_version(), 10.14)
+
+
+class AppsTestCase(TestCase):
+
+    def setUp(self):
+        self.key = 'NSNavLastRootDirectory'
+        self.app = process.App('com.apple.Terminal')
+
+    def test_get_prefs(self):
+        path = os.path.expanduser(self.app.prefs.get(self.key))
+        self.assertTrue(os.path.exists(path))
+
+    def test_set_prefs(self):
+        self.app.prefs.set(self.key, '/tmp')
+
+    def test_is_running(self):
+        self.assertTrue(self.app.is_running())
+
+    def test_launch(self):
+        self.assertTrue(self.app.launch())
+
+    def test_quit(self):
+        app = process.App('com.apple.Stickies', 'Stickies')
+        app.launch()
+        #app.quit()
+
+    def test_is_active(self):
+        self.assertTrue(self.app.is_active())
 
 
 class InstallerTestCase(TestCase):

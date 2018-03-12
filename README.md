@@ -6,6 +6,7 @@
 ### System Requirements
 
 - OS X (tested with 10.11-10.13)
+- Python 2.7 OR 3.6 (or later)
 
 
 ### Example

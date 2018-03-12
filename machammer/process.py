@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+try:
+    import CoreFoundation
+    from AppKit import NSWorkspace, NSUserDefaults, NSRunningApplication
+except ImportError:
+    raise Exception('Sorry, but it looks like your Python installation lacks PyObjc support')
+
 from . import defaults
 from .functions import call, tell_app
 
@@ -39,34 +45,66 @@ def open(name):
 
 
 class Prefs(object):
+
     def __init__(self, domain):
-        self._prefs = defaults.as_dict(domain)
-        
-    def __getattr__(self, k):
-        try:
-            return self._prefs[k]
-        except AttributeError:
-            return super(Prefs, self).getattr(k)
-    
-    def __setattr__(self, k, v):
-        print('Setting attribute: %s' % k)
-        self._prefs[k] = v
+        self.domain = domain
+        args = [self.domain, CoreFoundation.kCFPreferencesCurrentUser, CoreFoundation.kCFPreferencesAnyHost]
+        self.keys = CoreFoundation.CFPreferencesCopyKeyList(*args)
+        self.prefs = CoreFoundation.CFPreferencesCopyMultiple(self.keys, *args)
+
+        if not self.prefs:
+            raise ValueError('Invalid domain: %s' % self.domain)
+
+    def get(self, key):
+        if key not in self.keys:
+            raise Exception('Invalid key: %s' % key)
+
+        return self.prefs.get(key)
+
+    def set(self, key, value):
+        CoreFoundation.CFPreferencesSetAppValue(key, value, self.domain)
 
 
 class App(object):
-    def __init__(self, domain):
+
+    ws = NSWorkspace.sharedWorkspace()
+    
+    def __init__(self, domain=None, name=None):
+        if not (domain or name):
+            raise Exception('Name or domain must be provided')
+
         self.domain = domain
-        self.prefs = Prefs(domain)
+        self.prefs = Prefs(self.domain)
+        self.apps = NSRunningApplication.runningApplicationsWithBundleIdentifier_(self.domain)
+
+        if self.apps:
+            self.app = self.apps[0]
+            name = name or self.app.localizedName()
+
+        self.name = name
+
+    def is_running(self):
+        running = self.ws.runningApplications()
+        return self.domain in [a.bundleIdentifier() for a in running]
+
+    def tell(self):
+        raise NotImplementedError('Scripting support not implemented')
+
+    def activate(self):
+        raise NotImplementedError()
 
     def launch(self):
-        pass
+        return self.ws.launchApplication_(self.name)
     
+    def is_active(self):
+        return self.app.isActive()
+
     def quit(self):
-        pass
+        return self.app.terminate()
     
     def is_installed(self):
-        return False
+        raise NotImplementedError()
     
     def version(self):
-        return False
+        raise NotImplementedError()
 
